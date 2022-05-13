@@ -4,6 +4,18 @@ This package is used for java webservers that use Blue2Factor
 
 It can be used with Spring or without.
 
+##### With Maven:
+
+```
+<dependency>
+    <groupId>com.blue2factor.authentication</groupId>
+    <artifactId>javab2f</artifactId>
+    <version>0.0.3-SNAPSHOT</version>
+</dependency>
+```
+
+##### Or on GitHub at [https://github.com/bk89686/JavaB2f](https://github.com/bk89686/JavaB2f)
+
 ### To use with Spring:
 
 ```
@@ -81,17 +93,5 @@ import com.blue2factor.authentication.Blue2Factor;
     //redirect to b2f.getSignout(this.myCompanyId);
     
 ```
-
-### With Maven:
-
-```
-<dependency>
-    <groupId>com.blue2factor.authentication</groupId>
-    <artifactId>javab2f</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-</dependency>
-```
-
-##### Or on GitHub at [https://github.com/bk89686/JavaB2f](https://github.com/bk89686/JavaB2f)
 
 for questions, please contact us at (607) 238-3522 or help@blue2factor.com
