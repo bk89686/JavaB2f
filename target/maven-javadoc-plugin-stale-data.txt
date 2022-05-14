@@ -5,25 +5,27 @@
 -encoding
 'UTF-8'
 -protected
+-source
+'8'
 -sourcepath
-'/Users/cjm10/git/JavaB2f/JavaB2f/src:/Users/cjm10/git/JavaB2f/JavaB2f/target/generated-sources/annotations'
+'/Users/cjm10/git/JavaB2f/src:/Users/cjm10/git/JavaB2f/target/generated-sources/annotations'
 -author
 -bottom
 'Copyright &#169; 2022 <a href="https://www.blue2factor.com">Blue2Factor</a>. All rights reserved.'
 -charset
 'UTF-8'
 -d
-'/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs'
+'/Users/cjm10/git/JavaB2f/target/apidocs'
 -docencoding
 'UTF-8'
 -doctitle
-'Blue2Factor 0.0.1-SNAPSHOT API'
+'Blue2Factor 0.1.6-SNAPSHOT API'
 -linkoffline
-'https://docs.oracle.com/javase/8/docs/api' '/Users/cjm10/git/JavaB2f/JavaB2f/target/javadoc-bundle-options'
+'https://docs.oracle.com/javase/8/docs/api' '/Users/cjm10/git/JavaB2f/target/javadoc-bundle-options'
 -use
 -version
 -windowtitle
-'Blue2Factor 0.0.1-SNAPSHOT API'
+'Blue2Factor 0.1.6-SNAPSHOT API'
 com.blue2factor.authentication
 /Users/cjm10/.m2/repository/javax/servlet/javax.servlet-api/4.0.1/javax.servlet-api-4.0.1.jar = 1595509955982
 /Users/cjm10/.m2/repository/org/json/json/20220320/json-20220320.jar = 1651934013010
@@ -31,21 +33,21 @@ com.blue2factor.authentication
 /Users/cjm10/.m2/repository/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar = 1651934237504
 /Users/cjm10/.m2/repository/org/apache/httpcomponents/httpcore/4.4.15/httpcore-4.4.15.jar = 1639599956492
 /Users/cjm10/.m2/repository/commons-io/commons-io/2.11.0/commons-io-2.11.0.jar = 1639597858851
-/Users/cjm10/git/JavaB2f/JavaB2f/src = 1651945162732
-/Users/cjm10/git/JavaB2f/JavaB2f/target/generated-sources/annotations = 1651947507193
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/tag-search-index.js = 1651947915780
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/overview-tree.html = 1651947915774
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/module-search-index.js = 1651947915780
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/index.html = 1651947915785
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/package-search-index.js = 1651947915780
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/jquery-ui.overrides.css = 1651947915793
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/index-all.html = 1651947915784
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/allpackages-index.html = 1651947915779
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/member-search-index.js = 1651947915780
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/script.js = 1651947915788
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/stylesheet.css = 1651947915788
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/help-doc.html = 1651947915787
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/element-list = 1651947915761
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/allclasses-index.html = 1651947915779
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/type-search-index.js = 1651947915780
-/Users/cjm10/git/JavaB2f/JavaB2f/target/apidocs/search.js = 1651947915789
+/Users/cjm10/git/JavaB2f/src = 1651959620497
+/Users/cjm10/git/JavaB2f/target/generated-sources/annotations = 1652529817324
+/Users/cjm10/git/JavaB2f/target/apidocs/tag-search-index.js = 1652529882132
+/Users/cjm10/git/JavaB2f/target/apidocs/overview-tree.html = 1652529882126
+/Users/cjm10/git/JavaB2f/target/apidocs/module-search-index.js = 1652529882131
+/Users/cjm10/git/JavaB2f/target/apidocs/index.html = 1652529882137
+/Users/cjm10/git/JavaB2f/target/apidocs/package-search-index.js = 1652529882132
+/Users/cjm10/git/JavaB2f/target/apidocs/jquery-ui.overrides.css = 1652529882148
+/Users/cjm10/git/JavaB2f/target/apidocs/index-all.html = 1652529882136
+/Users/cjm10/git/JavaB2f/target/apidocs/allpackages-index.html = 1652529882131
+/Users/cjm10/git/JavaB2f/target/apidocs/member-search-index.js = 1652529882132
+/Users/cjm10/git/JavaB2f/target/apidocs/script.js = 1652529882139
+/Users/cjm10/git/JavaB2f/target/apidocs/stylesheet.css = 1652529882139
+/Users/cjm10/git/JavaB2f/target/apidocs/help-doc.html = 1652529882138
+/Users/cjm10/git/JavaB2f/target/apidocs/element-list = 1652529882115
+/Users/cjm10/git/JavaB2f/target/apidocs/allclasses-index.html = 1652529882130
+/Users/cjm10/git/JavaB2f/target/apidocs/type-search-index.js = 1652529882132
+/Users/cjm10/git/JavaB2f/target/apidocs/search.js = 1652529882145

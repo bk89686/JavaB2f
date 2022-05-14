@@ -37,6 +37,12 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.JwtParserBuilder;
 import io.jsonwebtoken.Jwts;
 
+/**
+ * The main class for validating Blue2Factor authentication on a Java web server
+ * 
+ * @author cjm10
+ *
+ */
 public class Blue2Factor {
     String secureUrl = "https://secure.blue2factor.com";
     String b2fLogoutUrl = secureUrl + "/logout";
@@ -49,10 +55,16 @@ public class Blue2Factor {
     private String redirect;
 
     /**
-     * Should be called at the top of every page that is protected by Blue2Factor
+     * If used without Spring this is the top most call
      * 
-     * @return AuthResponse, which is basically (success, newCookieVal, and where to redirect on
-     *         failure)
+     * @param currentUrl - where the browser is
+     * @param jwt        - from a POST or COOKIE
+     * @param b2fSetup   - from POST - can be null
+     * @param companyId  - from https://secure.blue2factor.com
+     * @param loginUrl   - from https://secure.blue2factor.com
+     * @param privateKey - corresponds to public key that was uploaded to
+     *                   https://secure.blue2factor.com
+     * @return a b2fAuthResponse with has authenticated, b2fCookie, redirect,b2fSetup;
      */
     public B2fAuthResponse authenticate(String currentUrl, String jwt, String b2fSetup,
             String companyId, String loginUrl, PrivateKey privateKey) {
@@ -76,12 +88,25 @@ public class Blue2Factor {
         return authResponse;
     }
 
+    /**
+     * Redirects after failure when using spring
+     * 
+     * @param httpServletResponse - spring response obj
+     * @return response with redirect
+     */
     public HttpServletResponse getRedirectSpring(HttpServletResponse httpServletResponse) {
         httpServletResponse.setHeader("Location", this.getRedirect());
         httpServletResponse.setStatus(302);
         return httpServletResponse;
     }
 
+    /**
+     * Should be called when ever a user signs out
+     * 
+     * @param httpServletResponse - spring response obj
+     * @param companyId           - from https://secure.blue2factor.com
+     * @return spring response obj with redirect to signout
+     */
     public HttpServletResponse getSignoutSpring(HttpServletResponse httpServletResponse,
             String companyId) {
         httpServletResponse.setHeader("Location", this.getSignout(companyId));
@@ -90,10 +115,14 @@ public class Blue2Factor {
     }
 
     /**
-     * Should be called at the top of every page that is protected by Blue2Factor
+     * should be called at the top of every Spring page protected by Blue2Factor
      * 
-     * @return AuthResponse, which is basically (success, newCookieVal, and where to redirect on
-     *         failure)
+     * @param httpRequest - spring request obj
+     * @param companyId   - from https://secure.blue2factor.com
+     * @param loginUrl    - from https://secure.blue2factor.com
+     * @param privateKey  - corresponds to public key that was uploaded to
+     *                    https://secure.blue2factor.com
+     * @return true if authenticated
      */
     public boolean authenticateSpring(HttpServletRequest httpRequest, String companyId,
             String loginUrl, PrivateKey privateKey) {
@@ -112,8 +141,8 @@ public class Blue2Factor {
     /**
      * for spring web server, set the cookies needed by b2f
      * 
-     * @param response
-     * @return spring response object
+     * @param response - spring response obj
+     * @return spring - same thing that came in but with a cookie
      */
     public HttpServletResponse setB2fCookies(HttpServletResponse response) {
         if (!isEmpty(this.b2fSetup)) {
@@ -497,7 +526,7 @@ public class Blue2Factor {
      * convert a string into a public Key
      * 
      * @param publicKeyStr
-     * @return
+     * @return a publicKey or null
      */
     private PublicKey stringToJwtPublicKey(String publicKeyStr) {
         PublicKey generatedPublic = null;
@@ -518,7 +547,7 @@ public class Blue2Factor {
      * 
      * @param jwt
      * @param headerStr
-     * @return
+     * @return the unencrypted header?
      */
     private String getJwtHeaderValue(String jwt, String headerStr) {
         String headerVal = null;
@@ -597,7 +626,7 @@ public class Blue2Factor {
      * remove double and single quotes from a string
      * 
      * @param text
-     * @return
+     * @return string with quotes removed
      */
     private String removeQuotes(String text) {
         return text.replace("\"", "").replace("'", "");
@@ -607,7 +636,7 @@ public class Blue2Factor {
      * Get the new token url based on the companyID
      * 
      * @param companyId
-     * @return
+     * @return token refresh url as string
      */
     private String getEndpoint(String companyId) {
         return secureUrl + "/SAML2/SSO/" + companyId + "/Token";
@@ -617,7 +646,7 @@ public class Blue2Factor {
      * Get the failure url base on the companyId
      * 
      * @param companyId
-     * @return
+     * @return url as string
      */
     private String getFailureUrl(String companyId) {
         return secureUrl + "/failure/" + companyId + "/recheck";
@@ -627,7 +656,7 @@ public class Blue2Factor {
      * Get the reset url based on he companyId
      * 
      * @param companyId
-     * @return
+     * @return url as string
      */
     private String getResetUrl(String companyId) {
         return secureUrl + "/failure/" + companyId + "/reset";
@@ -637,16 +666,27 @@ public class Blue2Factor {
      * get the issue for the JWT
      * 
      * @param companyId
-     * @return
+     * @return issuer in jwt as string
      */
     private String getIssuer(String companyId) {
         return secureUrl + "/SAML2/SSO/" + companyId + "/EntityId";
     }
 
+    /**
+     * get the url that failures should be sent to
+     * 
+     * @return redirect url as a string
+     */
     public String getRedirect() {
         return redirect;
     }
 
+    /**
+     * get the signout url
+     * 
+     * @param companyId
+     * @return
+     */
     private String getSignout(String companyId) {
         return secureUrl + "/SAML2/SSO/" + companyId + "/Signout";
     }
@@ -663,33 +703,70 @@ public class Blue2Factor {
         private String redirect;
         private String b2fSetup;
 
+        /**
+         * Initializer
+         * 
+         * @param authenticated - auth success or failure
+         * @param token         - a jwt
+         * @param redirect      - a url to follow when failure occurs
+         */
         public B2fAuthResponse(boolean authenticated, String token, String redirect) {
             this.authenticated = authenticated;
             this.b2fCookie = token;
             this.redirect = redirect;
         }
 
+        /**
+         * is the user b2f allowed
+         * 
+         * @return true if authenticated
+         */
         public boolean isAuthenticated() {
             return authenticated;
         }
 
+        /**
+         * get the jwt which will be stored as a cookie
+         * 
+         * @return the newest jwt
+         */
         public String getB2fCookie() {
             return b2fCookie;
         }
 
+        /**
+         * where the user should be sent on failure
+         * 
+         * @return the redirect url
+         */
         public String getRedirect() {
             return redirect;
         }
 
+        /**
+         * set the jwt as a cookie
+         * 
+         * @param b2fCookie - the jwt
+         */
         public void setB2fCookie(String b2fCookie) {
             print("update token");
             this.b2fCookie = b2fCookie;
         }
 
+        /**
+         * sets setup token
+         * 
+         * @param b2fSetup - string from POST
+         */
         public void setB2fSetup(String b2fSetup) {
             this.b2fSetup = b2fSetup;
         }
 
+        /**
+         * return a setup token
+         * 
+         * @return the setup token
+         */
         public String getB2fSetup() {
             return b2fSetup;
         }
