@@ -10,7 +10,7 @@ It can be used with Spring or without.
 <dependency>
     <groupId>com.blue2factor.authentication</groupId>
     <artifactId>javab2f</artifactId>
-    <version>0.0.4-SNAPSHOT</version>
+    <version>0.1.6-SNAPSHOT</version>
 </dependency>
 ```
 

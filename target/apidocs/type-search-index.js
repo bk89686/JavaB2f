@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"com.blue2factor.authentication","l":"Blue2Factor.B2fAuthResponse"},{"p":"com.blue2factor.authentication","l":"Blue2Factor"}];updateSearchResults();

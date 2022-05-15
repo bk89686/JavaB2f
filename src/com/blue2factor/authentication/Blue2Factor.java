@@ -31,6 +31,7 @@ import org.json.JSONObject;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+//import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
@@ -40,7 +41,7 @@ import io.jsonwebtoken.Jwts;
 /**
  * The main class for validating Blue2Factor authentication on a Java web server
  * 
- * @author cjm10
+ * @author cjm
  *
  */
 public class Blue2Factor {

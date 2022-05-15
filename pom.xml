@@ -1,13 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.blue2factor.authentication</groupId>
-  <artifactId>javab2f</artifactId>
-  <version>0.1.6-SNAPSHOT</version>
+  <artifactId>java-b2f</artifactId>
+  <version>1.0-SNAPSHOT</version>
   <name>Blue2Factor</name>
   <description>Blue2Factor for Java Webserver</description>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
   <profiles>
     <profile>
@@ -30,7 +32,7 @@
   <distributionManagement>
     <repository>
       <id>github</id>
-      <name>GitHub bk89686 Apache Maven Packages</name>
+      <name>GitHub OWNER Apache Maven Packages</name>
       <url>https://maven.pkg.github.com/bk89686/JavaB2f</url>
     </repository>
   </distributionManagement>
@@ -38,29 +40,19 @@
     <sourceDirectory>src</sourceDirectory>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.10.1</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
         </configuration>
       </plugin>
       <plugin>
-		<groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-javadoc-plugin</artifactId>
-		<version>3.4.0</version>
-		<configuration>
-          <source>8</source>
-        </configuration>
-		<executions>
-		  <execution>
-			<id>attach-javadocs</id>
-			<goals>
-			  <goal>jar</goal>
-			</goals>
-		  </execution>
-		</executions>
-	  </plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.4.0</version>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -101,4 +93,7 @@
   	<name>Blue2Factor</name>
   	<url>https://www.blue2factor.com</url>
   </organization>
+  <issueManagement>
+  	<url>https://github.com/bk89686/JavaB2f/issues</url>
+  </issueManagement>
 </project>
