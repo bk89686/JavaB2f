@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.blue2factor.authentication</groupId>
   <artifactId>java-b2f</artifactId>
-  <version>1.0.2-SNAPSHOT</version>
+  <version>1.0.3-SNAPSHOT</version>
   <name>Blue2Factor</name>
   <description>Blue2Factor for Java Webserver</description>
   <properties>
@@ -78,6 +78,12 @@
 	  <version>0.11.5</version>
 	  <scope>runtime</scope>
 	</dependency>
+	<dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>0.11.1</version>
+      <scope>runtime</scope>
+    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
