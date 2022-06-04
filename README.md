@@ -8,9 +8,9 @@ It can be used with Spring or without.
 
 ```
 <dependency>
-    <groupId>com.blue2factor.authentication</groupId>
-    <artifactId>javab2f</artifactId>
-    <version>0.1.6-SNAPSHOT</version>
+  <groupId>com.blue2factor.authentication</groupId>
+  <artifactId>java-b2f</artifactId>
+  <version>1.0.2-SNAPSHOT</version>
 </dependency>
 ```
 
