@@ -119,8 +119,8 @@ public class Blue2Factor {
      * should be called at the top of every Spring page protected by Blue2Factor
      * 
      * @param httpRequest - spring request obj
-     * @param companyId   - from https://secure.blue2factor.com
-     * @param loginUrl    - from https://secure.blue2factor.com
+     * @param companyId   - found on https://secure.blue2factor.com
+     * @param loginUrl    - found on https://secure.blue2factor.com
      * @param privateKey  - corresponds to public key that was uploaded to
      *                    https://secure.blue2factor.com
      * @return true if authenticated
@@ -147,7 +147,8 @@ public class Blue2Factor {
      */
     public HttpServletResponse setB2fCookies(HttpServletResponse response) {
         if (!isEmpty(this.b2fSetup)) {
-            response = setCookie(response, "b2fSetup", this.b2fSetup, 1, true);
+//            print("setting b2fSetup to " + this.b2fSetup);
+            response = setCookie(response, "b2fSetup", this.b2fSetup, 1, false);
         }
         if (!isEmpty(this.cookie)) {
             response = setCookie(response, "B2F_AUTHN", this.cookie, 1, true);
@@ -267,6 +268,7 @@ public class Blue2Factor {
         if (requestValue != null) {
             requestValue = requestValue.replace("%2B", "+");
         }
+//        print("requestVal: " + value + " = " + requestValue);
         return requestValue;
     }
 
