@@ -75,9 +75,10 @@ public class Blue2Factor {
             if (outcomeAndToken.isSuccess()) {
                 authResponse = new B2fAuthResponse(true, outcomeAndToken.getToken(), null);
             } else {
-                print("redirecting to " + this.getFailureUrl(companyId));
+                print("redirecting to " + this.getFailureUrl(companyId) + "?url="
+                        + urlEncode(currentUrl));
                 authResponse = new B2fAuthResponse(false, outcomeAndToken.getToken(),
-                        this.getFailureUrl(companyId));
+                        this.getFailureUrl(companyId) + "?url=" + urlEncode(currentUrl));
             }
         } else {
             print("jwt was empty");
@@ -324,6 +325,7 @@ public class Blue2Factor {
                     String jwtTokenId = claims.getId();
                     Date now = new Date();
                     if (exp.after(now)) {
+                        print("expires " + exp);
                         if (now.after(notBefore)) {
                             if (notEmpty(jwtTokenId)) {
                                 if (issuer.equals(this.getIssuer(companyId))) {
