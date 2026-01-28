@@ -2,14 +2,22 @@
 # For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
 
 name: Blue2Factor Authentication
+run-name: Deploy to ${{ inputs.deploy_target }} by @${{ github.actor }}
 
 on:
   release:
     types: [created]
-
+  push:
+    branches:
+      - master
+  workflow_dispatch: 
+    inputs:
+      deploy_target:
+        description: 'Deploy Target'
+        required: true
+        type: string
 jobs:
   build:
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
