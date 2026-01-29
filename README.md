@@ -26,13 +26,13 @@ import com.blue2factor.authentication.Blue2Factor;
 	final PrivateKey = getPrivateKey();
     Blue2Factor b2f = new Blue2Factor();
     //if using javax rather than jakarta then
-    //Blue2Factor b2f = new Blue2FactorJavax();
+    //Blue2FactorJavax b2f = new Blue2FactorJavax();
     
     @RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
     public String processUrl(HttpServletRequest request, HttpServletResponse httpResponse,
             ModelMap model) {
         if (!b2f.authenticateAndSecure(httpRequest, httpResponse, myCompanyId, pk)) {
-            return b2f.getRedirectSpring(httpServletResponse);
+            return b2f.getRedirect(httpServletResponse);
         }
         //do whatever you normally do
     }
