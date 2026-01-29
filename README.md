@@ -23,20 +23,16 @@ import com.blue2factor.authentication.Blue2Factor;
 
 ...
     final String myCompanyId = "COMPANY_ID from https://secure.blue2factor.com"
-    final String myLandingPage = "LOGIN_URL that was entered at https://secure.blue2factor.com"
-
+	final PrivateKey = getPrivateKey();
     Blue2Factor b2f = new Blue2Factor();
     
     @RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
-    public String processUrl(HttpServletRequest request, HttpServletResponse httpServletResponse,
+    public String processUrl(HttpServletRequest request, HttpServletResponse httpResponse,
             ModelMap model) {
-        PrivateKey pk = getPrivateKey();
-        if (!b2f.authenticateSpring(httpRequest, myCompanyId, myLandingPage, pk)) {
+        if (!b2f.authenticateAndSecure(httpRequest, httpResponse, myCompanyId, pk)) {
             return b2f.getRedirectSpring(httpServletResponse);
         }
-        httpResponse = b2f.setB2fCookies(httpServletResponse);
-        // do what ever you normally do
-        return "landingPage";
+        //do whatever you normally do
     }
     
     private PrivateKey getPrivateKey() {
@@ -45,7 +41,7 @@ import com.blue2factor.authentication.Blue2Factor;
     }
     
     //when a user signs out call:
-    return b2f.getSignoutSpring(httpServletResponse, companyId);
+    return b2f.getSignout(httpServletResponse, companyId);
     
 ```
 
@@ -56,37 +52,20 @@ import com.blue2factor.authentication.Blue2Factor;
 
 ...
 
-    final String myCompanyId = "COMPANY_ID from https://secure.blue2factor.com"
-    final String myLandingPage = "LOGIN_URL that was entered at https://secure.blue2factor.com"
+public class MyClass implements Filter
 
+    final String myCompanyId = "COMPANY_ID from https://secure.blue2factor.com"
+    final PrivateKey pk = getPrivateKey();
     Blue2Factor b2f = new Blue2Factor();
 
-    public String processUrl() {
-        B2fAuthResponse authResponse = b2f.authenticate(getCurrentUrl(), getJwt(), getB2fSetup() this.myCompanyId,
-            this.myLandingPage, getPrivateKey());
-        if (!auth.isAuthenticated(){
-            //redirect to auth.getRedirect() and return
-        }
-        //and set cookies with your own method
-        setCookie("B2F_AUTHN", auth.getB2fCookie());
-        setCookie("b2fSetup", auth.getB2fSetup());
-        
-        //do what you would normally do
-        
-    }
-    
-    private PrivateKey getPrivateKey() {
-        //your own method to get the private key that corresponds to the public key
-        //that you uploaded to https://secure.blue2factor.com
-    }
-    
-    private String getJwt() {
-        //Get B2F_AUTHN which was sent as part of a POST form
-        //if it's not there get the value of a cookie name B2F_AUTHN
-    }
-    
-    private String getB2fSetup() {
-        //Get b2fSetup which may have been sent as part of a POST form
+	@Override
+    public void doFilter(ServletRequest request, ServletResponse response, Filter chain) {
+        if (!b2f.authenticateAndSecure(httpRequest, httpResponse, myCompanyId, pk)) {
+			response.sendRedirect(b2f.getFailureUrl());
+        } else {
+			//success - do what you normally do
+			chain.doFilter(request, response);
+		}
     }
     
     //when a user signs out
@@ -94,4 +73,17 @@ import com.blue2factor.authentication.Blue2Factor;
     
 ```
 
+If you aren't using Spring, add this to your web.xml:
+
+```
+<filter>
+	<filter-name>B2FFilter</filter-name>
+	<filter-class>com.blue2factor.Blue2FactorFilter</filter-class>
+</filter>
+<filter-mapping>
+	<filter-name>B2FFilter</filter-name>
+	<url-pattern>/admin/*</url-pattern>
+<filter-mapping>
+
+```
 for questions, please contact us at (607) 238-3522 or help@blue2factor.com
