@@ -5,9 +5,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -21,9 +19,13 @@ import java.security.SignatureException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Date;
-import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.util.TextUtils;
@@ -36,30 +38,20 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.JwtParserBuilder;
 import io.jsonwebtoken.Jwts;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * The main class for validating Blue2Factor authentication on a Java web server
+ * if using javax
  * 
  * @author cjm
  *
  */
-public class Blue2Factor {
-	final static String secureUrl = "https://secure.blue2factor.com";
-	final static String b2fLogoutUrl = secureUrl + "/logout";
-	final static int SUCCESS = 0;
-	final static int FAILURE = 1;
-	final static int EXPIRED = -1;
+public class Blue2FactorJavax {
 	String currentJwt = null;
 	String b2fSetup = null;
 	String cookie = null;
 	private String redirect;
 	private String failureUrl;
-	private static String issuer;
 
 	/**
 	 * should be called at the top of every page protected by Blue2Factor. Validates
@@ -68,6 +60,7 @@ public class Blue2Factor {
 	 * @param request    - spring request obj
 	 * @param response   - spring response obj
 	 * @param companyId  - found on https://secure.blue2factor.com
+	 * @param loginUrl   - found on https://secure.blue2factor.com
 	 * @param privateKey - corresponds to public key that was uploaded to
 	 *                   https://secure.blue2factor.com
 	 * @return true if authenticated
@@ -88,6 +81,7 @@ public class Blue2Factor {
 	 * 
 	 * @param httpRequest - spring request obj
 	 * @param companyId   - found on https://secure.blue2factor.com
+	 * @param loginUrl    - found on https://secure.blue2factor.com
 	 * @param privateKey  - corresponds to public key that was uploaded to
 	 *                    https://secure.blue2factor.com
 	 * @return true if authenticated
@@ -120,18 +114,18 @@ public class Blue2Factor {
 			PrivateKey privateKey) {
 		B2fAuthResponse authResponse;
 		if (notEmpty(jwt)) {
-			OutcomeTokenAndUrl outcomeTokenAndUrl = b2fAuthorized(currentUrl, jwt, companyId, privateKey);
+			OutcomeTokenAndUrl outcomeTokenAndUrl = b2fAuthorized(jwt, companyId, privateKey);
 			if (outcomeTokenAndUrl.isSuccess()) {
 				authResponse = new B2fAuthResponse(true, outcomeTokenAndUrl.getToken(), null);
 			} else {
 				failureUrl = this.getFailureUrl(companyId) + "?url=" + urlEncode(currentUrl);
-				print("redirecting to " + failureUrl);
+				Blue2Factor.print("redirecting to " + failureUrl);
 				authResponse = new B2fAuthResponse(false, outcomeTokenAndUrl.getToken(), failureUrl);
 			}
 		} else {
-			print("jwt was empty");
+			Blue2Factor.print("jwt was empty");
 			String redirectSite = this.getResetUrl(companyId) + "?url=" + urlEncode(currentUrl);
-			print("setting redirect to " + redirectSite);
+			Blue2Factor.print("setting redirect to " + redirectSite);
 			authResponse = new B2fAuthResponse(false, null, redirectSite);
 		}
 		authResponse.setB2fSetup(b2fSetup);
@@ -297,27 +291,23 @@ public class Blue2Factor {
 	 * 
 	 * @param jwt
 	 * @param companyId
+	 * @param landingPageUrl
 	 * @param privateKey
 	 * @return an outcome and new jwt if successful
 	 */
-	private OutcomeTokenAndUrl b2fAuthorized(String currentUrl, String jwt, String companyId, PrivateKey privateKey) {
+	private OutcomeTokenAndUrl b2fAuthorized(String jwt, String companyId, PrivateKey privateKey) {
 		OutcomeTokenAndUrl outcomeTokenAndUrl;
-		try {
-			OutcomeAndUrl outcomeAndUrl = tokenIsValid(currentUrl, jwt, companyId, privateKey);
-			if (outcomeAndUrl.getOutcome() == Blue2Factor.SUCCESS) {
-				print("token was valid");
-				outcomeTokenAndUrl = (OutcomeTokenAndUrl) outcomeAndUrl;
+		OutcomeAndUrl outcomeAndUrl = tokenIsValid(jwt, companyId);
+		if (outcomeAndUrl.getOutcome() == Blue2Factor.SUCCESS) {
+			Blue2Factor.print("token was valid");
+			outcomeTokenAndUrl = (OutcomeTokenAndUrl) outcomeAndUrl;
+		} else {
+			if (outcomeAndUrl.getOutcome() == Blue2Factor.EXPIRED) {
+				Blue2Factor.print("token wasn't valid, will attempt to get a new one");
+				outcomeTokenAndUrl = this.getNewToken(jwt, companyId, privateKey);
 			} else {
-				if (outcomeAndUrl.getOutcome() == Blue2Factor.EXPIRED) {
-					print("token wasn't valid, will attempt to get a new one");
-					outcomeTokenAndUrl = this.getNewToken(currentUrl, jwt, companyId, privateKey);
-				} else {
-					outcomeTokenAndUrl = (OutcomeTokenAndUrl) outcomeAndUrl;
-				}
+				outcomeTokenAndUrl = (OutcomeTokenAndUrl) outcomeAndUrl;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			outcomeTokenAndUrl = new OutcomeTokenAndUrl(Blue2Factor.FAILURE, e.getMessage(), "");
 		}
 		return outcomeTokenAndUrl;
 	}
@@ -327,26 +317,20 @@ public class Blue2Factor {
 	 * 
 	 * @param jwt
 	 * @param companyId
+	 * @param loginUrl
 	 * @return true if valid
-	 * @throws InterruptedException
-	 * @throws IOException
-	 * @throws SignatureException
-	 * @throws NoSuchAlgorithmException
-	 * @throws InvalidKeyException
 	 */
-	private OutcomeAndUrl tokenIsValid(String currentUrl, String jwt, String companyId, PrivateKey privateKey)
-			throws InvalidKeyException, NoSuchAlgorithmException, SignatureException, IOException,
-			InterruptedException {
+	private OutcomeAndUrl tokenIsValid(String jwt, String companyId) {
 		int outcome = Blue2Factor.FAILURE;
 		String url = null;
 		if (notEmpty(jwt)) {
 			String x5uHeader = getJwtHeaderValue(jwt, "x5u");
-			print("publicKeyUrl: " + x5uHeader);
+			Blue2Factor.print("publicKeyUrl: " + x5uHeader);
 			PublicKey publicKey = getPublicKeyFromUrl(x5uHeader);
 			if (publicKey != null) {
 				Claims claims = decryptJwt(jwt, publicKey);
 				if (claims != null) {
-					print("claims were found");
+					Blue2Factor.print("claims were found");
 					Date exp = claims.getExpiration();
 					Date notBefore = claims.getNotBefore();
 					String issuer = claims.getIssuer();
@@ -354,36 +338,36 @@ public class Blue2Factor {
 					String jwtTokenId = claims.getId();
 					Date now = new Date();
 					if (exp.after(now)) {
-						print("expires " + exp);
+						Blue2Factor.print("expires " + exp);
 						if (now.after(notBefore)) {
 							if (notEmpty(jwtTokenId)) {
-								url = this.getIssuer(currentUrl, companyId, privateKey);
+								url = this.getIssuer(companyId);
 								if (!TextUtils.isEmpty(url) && issuer.equals(url)) {
 									if (audience.equals(url)) {
-										print("token is valid");
+										Blue2Factor.print("token is valid");
 										outcome = Blue2Factor.SUCCESS;
 									} else {
-										print("audience violated: " + audience);
+										Blue2Factor.print("audience violated: " + audience);
 									}
 								} else {
-									print("issuer violated: " + issuer);
+									Blue2Factor.print("issuer violated: " + issuer);
 								}
 							} else {
-								print("claimsId was empty");
+								Blue2Factor.print("claimsId was empty");
 							}
 						} else {
-							print("notBefore violated");
+							Blue2Factor.print("notBefore violated");
 						}
 					} else {
 						outcome = Blue2Factor.EXPIRED;
-						print("exp violated");
+						Blue2Factor.print("exp violated");
 					}
 				} else {
-					print("claims were null");
+					Blue2Factor.print("claims were null");
 				}
 			}
 		} else {
-			print("token was null");
+			Blue2Factor.print("token was null");
 		}
 
 		return new OutcomeAndUrl(outcome, url);
@@ -398,23 +382,23 @@ public class Blue2Factor {
 	 * @param privateKey
 	 * @return and outcome and a token if successful
 	 */
-	private OutcomeTokenAndUrl getNewToken(String currentUrl, String jwt, String companyId, PrivateKey privateKey) {
+	private OutcomeTokenAndUrl getNewToken(String jwt, String companyId, PrivateKey privateKey) {
 		boolean success = false;
 		String newJwt = null;
 		String url = null;
 		try {
 			String signature = signString(privateKey, jwt);
 			String response = sendGet(this.getEndpoint(companyId), jwt + "&" + signature);
-			print("newToken response: " + response);
+			Blue2Factor.print("newToken response: " + response);
 			if (response != null) {
 				JSONObject json = new JSONObject(response);
 				if (json.getInt("outcome") == Blue2Factor.SUCCESS) {
 					newJwt = json.getString("token");
-					OutcomeAndUrl outcomeAndUrl = tokenIsValid(currentUrl, newJwt, companyId, privateKey);
+					OutcomeAndUrl outcomeAndUrl = tokenIsValid(newJwt, companyId);
 					success = outcomeAndUrl.isSuccess();
 					url = outcomeAndUrl.getUrl();
 				} else {
-					print("new TokenFailed: " + json.getInt("outcome"));
+					Blue2Factor.print("new TokenFailed: " + json.getInt("outcome"));
 				}
 			}
 		} catch (InterruptedException e) {
@@ -471,7 +455,7 @@ public class Blue2Factor {
 				claims = jws.getBody();
 			}
 		} catch (ExpiredJwtException e) {
-			print("Expired key, setting claims");
+			Blue2Factor.print("Expired key, setting claims");
 			print(e);
 			claims = e.getClaims();
 		} catch (JwtException ex) {
@@ -540,7 +524,7 @@ public class Blue2Factor {
 			conn.setUseCaches(false);
 			conn.setRequestMethod("GET");
 			int responseCode = conn.getResponseCode();
-			print("responseCode: " + responseCode);
+			Blue2Factor.print("responseCode: " + responseCode);
 			if (responseCode == 200) {
 				// read the response
 				in = new BufferedInputStream(conn.getInputStream());
@@ -555,67 +539,6 @@ public class Blue2Factor {
 		if (conn != null) {
 			conn.disconnect();
 		}
-		return result;
-	}
-
-	/**
-	 * send a url request
-	 * 
-	 * @param urlStr
-	 * @param jwt
-	 * @return the response text
-	 * @throws InterruptedException
-	 * @throws IOException
-	 */
-	public String sendPost(String urlStr, String[] params, int trialNum) throws IOException, InterruptedException {
-		InputStream in = null;
-		HttpsURLConnection conn = null;
-		boolean first = true;
-		String paramStr = "";
-		String result = "";
-		for (String param : params) {
-			if (first) {
-				first = false;
-			} else {
-				paramStr += "&";
-			}
-			paramStr += param;
-		}
-		try {
-			URI uri = new URI(urlStr);
-			URL url = uri.toURL();
-			conn = (HttpsURLConnection) url.openConnection();
-			conn.setConnectTimeout(25000);
-			conn.setRequestProperty("Cache-Control", "no-cache");
-			conn.setRequestProperty("Pragma", "no-cache");
-			conn.setRequestProperty("Accept-Charset", StandardCharsets.UTF_8.toString());
-			conn.setUseCaches(false);
-			conn.setRequestProperty("Content-Type", "multipart/form-data");
-			conn.setDoOutput(true);
-			conn.setDoInput(true);
-			conn.setRequestMethod("POST");
-
-			OutputStreamWriter os = new OutputStreamWriter(conn.getOutputStream());
-			os.write(paramStr);
-			os.flush();
-			os.close();
-
-			// read the response
-			in = new BufferedInputStream(conn.getInputStream());
-			result = org.apache.commons.io.IOUtils.toString(in, StandardCharsets.UTF_8);
-		} catch (Exception e) {
-			if (trialNum < 2) {
-				Thread.sleep(100);
-				result = sendPost(urlStr, params, trialNum + 1);
-			}
-		}
-		if (in != null) {
-			in.close();
-		}
-		if (conn != null) {
-			conn.disconnect();
-		}
-
 		return result;
 	}
 
@@ -650,10 +573,10 @@ public class Blue2Factor {
 		String headerVal = null;
 		String[] jwtArray = jwt.split("\\.");
 		if (jwtArray.length > 1) {
-			print("header: " + jwtArray[0]);
+			Blue2Factor.print("header: " + jwtArray[0]);
 			Base64.Decoder decoder = Base64.getUrlDecoder();
 			String header = new String(decoder.decode(jwtArray[0]));
-			print("header decoded: " + header);
+			Blue2Factor.print("header decoded: " + header);
 			String[] headerArray = header.split("\"" + headerStr + "\":");
 			if (headerArray.length == 2) {
 				String headerArray2[] = headerArray[1].split("}");
@@ -661,7 +584,7 @@ public class Blue2Factor {
 				headerVal = removeQuotes(headerArray3[0]);
 			}
 		}
-		print(headerStr + ": " + headerVal);
+		Blue2Factor.print(headerStr + ": " + headerVal);
 		return headerVal;
 	}
 
@@ -677,7 +600,7 @@ public class Blue2Factor {
 			try {
 				newUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.name());
 			} catch (UnsupportedEncodingException e) {
-				new Blue2Factor().print(e);
+				new Blue2FactorJavax().print(e);
 			}
 		}
 		return newUrl;
@@ -690,7 +613,7 @@ public class Blue2Factor {
 	 */
 	private void print(Exception e) {
 		String stacktrace = ExceptionUtils.getStackTrace(e);
-		print(stacktrace);
+		Blue2Factor.print(stacktrace);
 	}
 
 	/**
@@ -702,21 +625,12 @@ public class Blue2Factor {
 	private boolean notEmpty(String text) {
 		boolean notEmpty = false;
 		if (!TextUtils.isEmpty(text)) {
-			print(text + " is not empty");
+			Blue2Factor.print(text + " is not empty");
 			if (!text.equals("null")) {
 				notEmpty = true;
 			}
 		}
 		return notEmpty;
-	}
-
-	/**
-	 * print to console
-	 * 
-	 * @param text
-	 */
-	public static void print(String text) {
-		System.out.println(new Date() + ": " + text);
 	}
 
 	/**
@@ -736,7 +650,7 @@ public class Blue2Factor {
 	 * @return token refresh url as string
 	 */
 	private String getEndpoint(String companyId) {
-		return secureUrl + "/SAML2/SSO/" + companyId + "/Token";
+		return Blue2Factor.secureUrl + "/SAML2/SSO/" + companyId + "/Token";
 	}
 
 	/**
@@ -746,7 +660,7 @@ public class Blue2Factor {
 	 * @return url as string
 	 */
 	private String getFailureUrl(String companyId) {
-		return secureUrl + "/failure/" + companyId + "/recheck";
+		return Blue2Factor.secureUrl + "/failure/" + companyId + "/recheck";
 	}
 
 	public String getFailureUrl() {
@@ -760,42 +674,17 @@ public class Blue2Factor {
 	 * @return url as string
 	 */
 	private String getResetUrl(String companyId) {
-		return secureUrl + "/failure/" + companyId + "/reset";
+		return Blue2Factor.secureUrl + "/failure/" + companyId + "/reset";
 	}
 
 	/**
 	 * get the issue for the JWT
 	 * 
-	 * 
 	 * @param companyId
 	 * @return issuer in jwt as string
-	 * @throws SignatureException
-	 * @throws NoSuchAlgorithmException
-	 * @throws InvalidKeyException
-	 * @throws InterruptedException
-	 * @throws IOException
 	 */
-	private String getIssuer(String currentUrl, String companyId, PrivateKey privateKey) throws InvalidKeyException,
-			NoSuchAlgorithmException, SignatureException, IOException, InterruptedException {
-		if (TextUtils.isBlank(issuer)) {
-			String uuid = getUuid();
-			String signedString = signString(privateKey, uuid);
-			String[] args = { "uuid=" + uuid, "signature=" + signedString, "requester=" + currentUrl };
-			String url = getEntityUrl(companyId);
-			String response = this.sendPost(url, args, 0);
-			if (response != null) {
-				JSONObject json = new JSONObject(response);
-				if (json.getInt("outcome") == Blue2Factor.SUCCESS) {
-					issuer = json.getString("reason");
-				}
-			}
-		}
-		return issuer;
-
-	}
-
-	private static String getUuid() {
-		return UUID.randomUUID().toString().toUpperCase();
+	private String getIssuer(String companyId) {
+		return Blue2Factor.secureUrl + "/SAML2/SSO/" + companyId + "/EntityId";
 	}
 
 	/**
@@ -814,11 +703,7 @@ public class Blue2Factor {
 	 * @return
 	 */
 	private String getSignout(String companyId) {
-		return secureUrl + "/SAML2/SSO/" + companyId + "/Signout";
-	}
-
-	private String getEntityUrl(String companyId) {
-		return secureUrl + "/SAML2/SSO/" + companyId + "/ClientEntityId";
+		return Blue2Factor.secureUrl + "/SAML2/SSO/" + companyId + "/Signout";
 	}
 
 	/**
@@ -879,7 +764,7 @@ public class Blue2Factor {
 		 * @param b2fCookie - the jwt
 		 */
 		public void setB2fCookie(String b2fCookie) {
-			print("update token");
+			Blue2Factor.print("update token");
 			this.b2fCookie = b2fCookie;
 		}
 
@@ -910,11 +795,6 @@ public class Blue2Factor {
 	 */
 	private class OutcomeTokenAndUrl extends OutcomeAndUrl {
 		private String token;
-
-		OutcomeTokenAndUrl(int outcome, String token, String url) {
-			super(outcome, url);
-			this.token = token;
-		}
 
 		OutcomeTokenAndUrl(boolean outcomeSuccess, String token, String url) {
 			super(outcomeSuccess, url);

@@ -25,6 +25,8 @@ import com.blue2factor.authentication.Blue2Factor;
     final String myCompanyId = "COMPANY_ID from https://secure.blue2factor.com"
 	final PrivateKey = getPrivateKey();
     Blue2Factor b2f = new Blue2Factor();
+    //if using javax rather than jakarta then
+    //Blue2Factor b2f = new Blue2FactorJavax();
     
     @RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
     public String processUrl(HttpServletRequest request, HttpServletResponse httpResponse,
