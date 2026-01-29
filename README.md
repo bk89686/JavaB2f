@@ -25,8 +25,6 @@ import com.blue2factor.authentication.Blue2Factor;
     final String myCompanyId = "COMPANY_ID from https://secure.blue2factor.com"
 	final PrivateKey = getPrivateKey();
     Blue2Factor b2f = new Blue2Factor();
-    //if using javax rather than jakarta then
-    //Blue2FactorJavax b2f = new Blue2FactorJavax();
     
     @RequestMapping(method = { RequestMethod.GET, RequestMethod.POST })
     public String processUrl(HttpServletRequest request, HttpServletResponse httpResponse,
@@ -71,7 +69,7 @@ public class MyClass implements Filter
     }
     
     //when a user signs out
-    //redirect to b2f.getSignout(this.myCompanyId);
+    //redirect to b2f.getSignout(servletResponse, this.myCompanyId);
     
 ```
 

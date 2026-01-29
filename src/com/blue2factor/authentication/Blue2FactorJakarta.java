@@ -2,19 +2,12 @@ package com.blue2factor.authentication;
 
 import java.security.PrivateKey;
 
-import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-/**
- * The main class for validating Blue2Factor authentication on a Java web server
- * if using javax
- * 
- * @author cjm
- *
- */
-public class Blue2FactorJavax extends Blue2Factor {
+public class Blue2FactorJakarta extends Blue2Factor {
 	/**
 	 * should be called at the top of every page protected by Blue2Factor. Validates
 	 * the user has access and update the cookies.
@@ -27,11 +20,11 @@ public class Blue2FactorJavax extends Blue2Factor {
 	 * @return true if authenticated
 	 */
 	@Override
-	public boolean authenticateAndSecure(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			String companyId, PrivateKey privateKey) {
-		boolean valid = authenticate(httpRequest, companyId, privateKey);
+	public boolean authenticateAndSecure(HttpServletRequest request, HttpServletResponse response, String companyId,
+			PrivateKey privateKey) {
+		boolean valid = authenticate(request, companyId, privateKey);
 		if (valid) {
-			setB2fCookies(httpResponse);
+			setB2fCookies(response);
 		}
 		return valid;
 	}
@@ -191,4 +184,5 @@ public class Blue2FactorJavax extends Blue2Factor {
 		httpResponse.setHeader("Location", this.getSignout(companyId));
 		httpResponse.setStatus(302);
 	}
+
 }
